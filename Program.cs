@@ -1,14 +1,13 @@
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
-#region Add Serilog
 builder.Host.UseSerilog((ctx, loggerConfig) => loggerConfig.ReadFrom.Configuration(builder.Configuration));
-#endregion
 
-builder.Services.AddControllers(options => { options.Filters.Add<LoggingFilter>(); });
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddControllers(options => {
+    options.Filters.Add<LoggingFilter>();
+    options.Filters.Add<AsyncLoggingFilter>();
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

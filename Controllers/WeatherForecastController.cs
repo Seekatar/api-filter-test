@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace api_filter_test.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class WeatherForecastController : ControllerBase
+[TypeFilter(typeof(LoggingActionClassFilterAttribute))] // since I need to inject a logger, I can't use [LoggingActionClassFilterAttribute] attribute
+public class WeatherForecastController : Controller
 {
     private static readonly string[] Summaries = new[]
     {
@@ -18,11 +20,22 @@ public class WeatherForecastController : ControllerBase
         _logger = logger;
     }
 
+    // Controller override
+    // sync methods, too OnActionExecuting, OnActionExecuted, OnResultExecuting, OnResultExecuted, OnException
+    public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        LoggingFilterBase.LogBefore(_logger, GetType().Name, nameof(OnActionExecutionAsync), context);
+        await next();
+        LoggingFilterBase.LogAfter(_logger, GetType().Name, nameof(OnActionExecutionAsync), context);
+    }
+
     [HttpGet]
     [Route("/weather")]
+    [TypeFilter(typeof(LoggingActionFilterAttribute))] // since I need to inject a logger, I can't use [LoggingActionFilter] attribute
+    [TypeFilter(typeof(LoggingResultFilterAttribute))] // since I need to inject a logger, I can't use [LoggingResultFilter] attribute
     public IEnumerable<WeatherForecast> Get()
     {
-        _logger.LogInformation(System.Reflection.MethodBase.GetCurrentMethod()!.Name);
+        _logger.LogInformation(GetType().Name+"."+System.Reflection.MethodBase.GetCurrentMethod()!.Name);
 
         return Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
@@ -32,9 +45,10 @@ public class WeatherForecastController : ControllerBase
         })
         .ToArray();
     }
-    
+
     [HttpGet]
     [Route("/error")]
+    [TypeFilter(typeof(LoggingExceptionAttribute))] // since I need to inject a logger, I can't use [LoggingException] attribute
     public IEnumerable<WeatherForecast> Error()
     {
         _logger.LogInformation(System.Reflection.MethodBase.GetCurrentMethod()!.Name);
