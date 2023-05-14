@@ -19,6 +19,9 @@ internal class LoggingFilter :  LoggingFilterBase,
     }
     public void OnActionExecuted(ActionExecutedContext context)
     {
+        // if (context.Canceled) another filter short-circuited the pipeline
+        // if (context.Exception is not null) something threw an exception
+
         LogAfter(System.Reflection.MethodBase.GetCurrentMethod()!.Name, context);
     }
 

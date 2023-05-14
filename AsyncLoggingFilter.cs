@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 internal class AsyncLoggingFilter :  LoggingFilterBase,
@@ -17,6 +18,7 @@ internal class AsyncLoggingFilter :  LoggingFilterBase,
     {
         var name = nameof(OnAuthorizationAsync);
         LogBefore(name, context);
+        // short circuit it context.Result = new UnauthorizedResult();
         return Task.CompletedTask;
     }
 
@@ -24,7 +26,9 @@ internal class AsyncLoggingFilter :  LoggingFilterBase,
     {
         var name = nameof(OnActionExecutionAsync);
         LogBefore(name, context);
-        await next();
+        var executedContext = await next();
+        if (executedContext.Canceled) {} //  another filter short-circuited the pipeline
+        if (executedContext.Exception is not null) {} //  something threw an exception
         LogAfter(name, context);
     }
 
@@ -32,7 +36,7 @@ internal class AsyncLoggingFilter :  LoggingFilterBase,
     {
         var name = nameof(OnResultExecutionAsync);
         LogBefore(name, context);
-        await next();
+        var executedContext = await next();
         LogAfter(name, context);
     }
 
@@ -48,7 +52,7 @@ internal class AsyncLoggingFilter :  LoggingFilterBase,
     {
         var name = nameof(OnResourceExecutionAsync);
         LogBefore(name, context);
-        await next();
+        var executedContext = await next();
         LogAfter(name, context);
     }
 }

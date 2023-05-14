@@ -31,8 +31,9 @@ public class WeatherForecastController : Controller
 
     [HttpGet]
     [Route("/weather")]
-    [TypeFilter(typeof(LoggingActionFilterAttribute))] // since I need to inject a logger, I can't use [LoggingActionFilter] attribute
-    [TypeFilter(typeof(LoggingResultFilterAttribute))] // since I need to inject a logger, I can't use [LoggingResultFilter] attribute
+    // Use TypeFilter since since I need to inject a logger
+    [TypeFilter(typeof(LoggingActionFilterAttribute), Arguments = new object [] {"extraOverride"})]
+    [TypeFilter(typeof(LoggingResultFilterAttribute), IsReusable=false)]
     public IEnumerable<WeatherForecast> Get()
     {
         _logger.LogInformation(GetType().Name+"."+System.Reflection.MethodBase.GetCurrentMethod()!.Name);
@@ -48,7 +49,8 @@ public class WeatherForecastController : Controller
 
     [HttpGet]
     [Route("/error")]
-    [TypeFilter(typeof(LoggingExceptionAttribute))] // since I need to inject a logger, I can't use [LoggingException] attribute
+    [TypeFilter(typeof(LoggingActionFilterAttribute))]
+    [ServiceFilter(typeof(LoggingExceptionAttribute), IsReusable=true)] // since I need to inject a logger, I can't use [LoggingException] attribute
     public IEnumerable<WeatherForecast> Error()
     {
         _logger.LogInformation(System.Reflection.MethodBase.GetCurrentMethod()!.Name);
